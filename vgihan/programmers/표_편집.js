@@ -1,8 +1,82 @@
+function Node(index) {
+  this.index = index;
+  this.prev = null;
+  this.next = null;
+}
+function List(length, selected) {
+  this.head = new Node(0);
+  this.tail = this.head;
+  this.selected = this.head;
+  this.stack = [];
+  for (let i = 1; i < length; i++) {
+    const temp = new Node(i);
+    this.tail.next = temp;
+    temp.prev = this.tail;
+    this.tail = temp;
+    if (i === selected) {
+      this.selected = temp;
+    }
+  }
+  this.up = (count) => {
+    for (let i = 0; i < count; i++) {
+      this.selected = this.selected.prev;
+    }
+  };
+  this.down = (count) => {
+    for (let i = 0; i < count; i++) {
+      this.selected = this.selected.next;
+    }
+  };
+  this.delete = () => {
+    if (this.selected === this.head) {
+      this.head = this.head.next;
+      this.head.prev = null;
+      this.stack.push(this.selected);
+      this.selected = this.head;
+      return;
+    }
+    if (this.selected === this.tail) {
+      this.tail = this.tail.prev;
+      this.tail.next = null;
+      this.stack.push(this.selected);
+      this.selected = this.tail;
+      return;
+    }
+    this.selected.prev.next = this.selected.next;
+    this.selected.next.prev = this.selected.prev;
+    this.stack.push(this.selected);
+    this.selected = this.selected.next;
+  };
+  this.recover = () => {
+    const targetNode = this.stack[this.stack.length - 1];
+    this.stack.splice(this.stack.length - 1, 1);
+    if (!targetNode) return;
+    if (!targetNode.prev) {
+      this.head.prev = targetNode;
+      this.head = targetNode;
+      return;
+    }
+    if (!targetNode.next) {
+      this.tail.next = targetNode;
+      this.tail = targetNode;
+      return;
+    }
+    targetNode.prev.next = targetNode;
+    targetNode.next.prev = targetNode;
+  };
+  this.result = () => {
+    let temp = this.head;
+    const checkList = Array.from({ length: length }).map((v, i) => "X");
+    while (temp) {
+      checkList[temp.index] = "O";
+      temp = temp.next;
+    }
+    return checkList.join("");
+  };
+}
+
 function solution(n, k, cmd) {
-  const initList = Array.from({ length: n }).map((v, i) => i);
-  const [change, deleteElement, restore, getList] = useList(k, initList);
-  const UP = "UP";
-  const DOWN = "DOWN";
+  const list = new List(n, k);
 
   cmd.forEach((command) => {
     const [type, size] = command.split(" ");
@@ -10,71 +84,20 @@ function solution(n, k, cmd) {
     switch (type) {
       case "D":
         if (!size) return;
-        change(DOWN, parseInt(size));
+        list.down(parseInt(size));
         break;
       case "U":
         if (!size) return;
-        change(UP, parseInt(size));
+        list.up(parseInt(size));
         break;
       case "C":
-        deleteElement();
+        list.delete();
         break;
       case "Z":
-        restore();
+        list.recover();
         break;
     }
   });
 
-  const temp = Array.from({ length: n }).map((v, i) => "X");
-  return getList()
-    .reduce((pre, v) => {
-      pre[v] = "O";
-      return pre;
-    }, temp)
-    .join("");
-}
-function useList(initSelected, initList) {
-  const UP = "UP";
-  const DOWN = "DOWN";
-  const stack = [];
-  let list = initList;
-  let selected = initSelected;
-  function push(value) {
-    if (stack > 1000000) return;
-    stack.push(value);
-  }
-  function pop(value) {
-    if (stack.length <= 0) return;
-    return stack.splice(stack.length - 1, 1)[0];
-  }
-  function changeSelected(type, dist) {
-    if (type === UP) {
-      selected -= dist;
-      return;
-    }
-    if (type === DOWN) {
-      selected += dist;
-      return;
-    }
-  }
-  function deleteElement() {
-    push({
-      index: selected,
-      value: list[selected],
-    });
-    list.splice(selected, 1);
-    if (selected >= list.length) {
-      selected = list.length - 1;
-    }
-  }
-  function restore() {
-    const { index, value } = pop();
-    list.splice(index, 0, value);
-    if (index > selected) return;
-    selected++;
-  }
-  function getList() {
-    return list;
-  }
-  return [changeSelected, deleteElement, restore, getList];
+  return list.result();
 }
