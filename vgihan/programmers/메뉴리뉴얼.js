@@ -1,70 +1,58 @@
 "use strict";
 
 function solution(orders, course) {
-  const objToArray = (obj) => {
-    return Object.keys(obj).reduce((pre, key) => {
-      pre.push({ [key]: obj[key] });
-      return pre;
-    }, []);
-  };
-  const codeToChar = (code) => {
-    let temp = code;
-    const check = Array.from({ length: 26 })
-      .map((v, i) => i)
-      .reduce((checkArr, cook) => {
-        if (temp & (1 === 1)) checkArr.push(cook);
-        temp = temp >> 1;
-        return checkArr;
-      }, []);
-    return check.map((code) => String.fromCharCode(code + 65)).join("");
-  };
-  const result = orders.reduce((preResult, order) => {
-    for (let i = 1; i < 2 ** order.length; i++) {
-      const selectStrs = i.toString(2).padStart(order.length, "0").split("");
-      const numOfCook = selectStrs.reduce((numOfTrue, str) => {
-        if (str === "1") return numOfTrue + 1;
-        return numOfTrue;
-      }, 0);
-      if (!course.includes(numOfCook)) continue;
-      const key = order.split("").reduce((preSelect, char, idx) => {
-        if (selectStrs[idx] === "0") return preSelect;
-        const curCode = char.charCodeAt() - 65;
-        preSelect += 1 << curCode;
-        return preSelect;
-      }, 0);
-      if (!preResult[key]) preResult[key] = 0;
-      preResult[key]++;
-    }
-    return preResult;
+  const calComb = orders.reduce((result, order) => {
+    getCombination(order).forEach((menu) => {
+      if (!result[menu]) result[menu] = 0;
+      result[menu]++;
+    });
+    return result;
   }, {});
-  const answer = objToArray(result)
-    .map((obj) => {
-      return { [codeToChar(Object.keys(obj)[0])]: obj[Object.keys(obj)[0]] };
-    })
+  const filteredComb = Object.entries(calComb)
+    .reduce((pre, comb) => {
+      if (comb[1] <= 1) return pre;
+      if (!course.includes(comb[0].length)) return pre;
+      pre.push(comb);
+      return pre;
+    }, [])
     .sort((a, b) => {
-      const aEntry = Object.entries(a);
-      const bEntry = Object.entries(b);
-      if (aEntry[0][1] > bEntry[0][1]) return -1;
-      else if (aEntry[0][1] < bEntry[0][1]) return 1;
-      if (aEntry[0][0].length > bEntry[0][0].length) return -1;
-      else if (aEntry[0][0].length < bEntry[0][0].length) return 1;
-    })
-    .reduce(
-      (pre, element) => {
-        const entry = Object.entries(element)[0];
-        if (entry[1] === 1) return pre;
-        if (pre.length === 0 || entry[1] < pre.value) {
-          pre.length = entry[0].length;
-          pre.value = entry[1];
-          pre.result.push(entry[0]);
-          return pre;
-        }
-        if (entry[0].length < pre.length) return pre;
-        pre.result.push(entry[0]);
-        return pre;
-      },
-      { length: 0, value: 0, result: [] }
-    )
-    .result.sort();
-  return answer;
+      if (a[1] > b[1]) return -1;
+      else if (a[1] < b[1]) return 1;
+      if (a[0].length > b[0].length) return -1;
+      else if (a[0].length < b[0].length) return 1;
+    });
+  const classification = filteredComb.reduce((pre, comb) => {
+    if (!pre[comb[1]]) pre[comb[1]] = [];
+    pre[comb[1]].push(comb[0]);
+    return pre;
+  }, {});
+  const result = Object.keys(classification)
+    .reduce((pre, num) => {
+      const maxLength = classification[num].reduce((max, menu) => {
+        if (max < menu.length) return menu.length;
+        return max;
+      }, 0);
+      pre.push(...classification[num].filter((v) => v.length === maxLength));
+      return pre;
+    }, [])
+    .sort();
+
+  return result;
+}
+function getCombination(str) {
+  const init = Array.from({ length: 2 ** str.length - 1 }).map((v, i) => i + 1);
+  return init.reduce((pre, v) => {
+    const select = v.toString(2).padStart(str.length, "0");
+    const curMenu = str
+      .split("")
+      .sort()
+      .reduce((selectedCook, cook, idx) => {
+        if (select[idx] === "0") return selectedCook;
+        selectedCook.push(cook);
+        return selectedCook;
+      }, []);
+    if (curMenu.length <= 1) return pre;
+    pre.push(curMenu.join(""));
+    return pre;
+  }, []);
 }
