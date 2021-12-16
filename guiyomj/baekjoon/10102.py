@@ -1,0 +1,6 @@
+n = int(input())
+arr = ''.join(sorted(list(input())))
+idx = arr.find('B')
+if idx < 0 or 2 * idx > n: print('A')
+elif 2* idx < n: print('B')
+else: print('Tie')
