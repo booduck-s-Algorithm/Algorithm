@@ -1,20 +1,26 @@
-const input = require("fs")
-  .readFileSync("/dev/stdin")
-  .toString()
-  .trim()
-  .split("\n");
+const readline = require("readline");
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 const dp = makeTable();
 
-for (let i = 0; i < input.length - 1; i++) {
-  solution(input[i].split(" ").map((v) => parseInt(v)));
-}
+rl.on("line", function (line) {
+  if (line === "-1 -1 -1") {
+    rl.close();
+    return;
+  }
+  console.log(solution(line.split(" ").map((v) => parseInt(v))));
+}).on("close", function () {
+  process.exit();
+});
 
 function solution([a, b, c]) {
   const _a = a < 0 ? 0 : a > 20 ? 20 : a;
   const _b = b < 0 ? 0 : b > 20 ? 20 : b;
   const _c = c < 0 ? 0 : c > 20 ? 20 : c;
-  console.log(`w(${a}, ${b}, ${c}) = ${dp[_a][_b][_c]}`);
+  return `w(${a}, ${b}, ${c}) = ${dp[_a][_b][_c]}`;
 }
 
 function makeTable() {
