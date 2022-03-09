@@ -5,20 +5,16 @@ const rl = readline.createInterface({
 });
 
 rl.on("line", function (line) {
-  console.log(solution(line.split(" ").map((v) => parseInt(v))));
+  console.log(parseInt(pow(...line.split(" ").map((v) => BigInt(v)))));
   rl.close();
 }).on("close", function () {
   process.exit();
 });
 
 const pow = (a, b, c) => {
-  if (b === 0) return 1;
-  if (b === 1) return a % c;
-  const half = pow(a, Math.floor(b / 2), c) % c;
-  if (!b % 2) return (half % c) * (half % c);
-  return (((((half % c) * (half % c)) % c) % c) * (a % c)) % c;
+  if (b === 0n) return 1;
+  if (b === 1n) return a % c;
+  const half = pow(a, BigInt(b / BigInt(2)), c);
+  if (BigInt(b) % 2n === 0n) return (half * half) % c;
+  return (half * half * a) % c;
 };
-
-function solution([a, b, c]) {
-  return pow(a, b, c);
-}
